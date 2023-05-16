@@ -2,6 +2,7 @@ package service
 
 import (
 	"crypto/sha1"
+	"errors"
 	"fmt"
 	"time"
 
@@ -49,6 +50,26 @@ func (s *AuthService) GenerateToken(username, password string) (string, error) {
 	})
 
 	return token.SignedString([]byte(viper.GetString("app.secrete")))
+}
+
+func (s *AuthService) ParseToken(accessToken string) (int, error) {
+	token, err := jwt.ParseWithClaims(accessToken, &tokenClaims{}, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("invalid signing method")
+		}
+
+		return []byte(viper.GetString("app.secrete")), nil
+	})
+	if err != nil {
+		return -1, err
+	}
+
+	claims, ok := token.Claims.(*tokenClaims)
+	if !ok {
+		return -1, errors.New("token claims are not if type *tokenClaims")
+	}
+
+	return claims.UserID, nil
 }
 
 func generatePasswordHash(password string) string {
