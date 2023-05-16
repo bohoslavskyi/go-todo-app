@@ -1,6 +1,10 @@
 server:
     port: "8000"
 
+app:
+    secrete: ~
+    tokenTTL: 12
+
 db:
     hostname: "localhost"
     username: "postgres"
